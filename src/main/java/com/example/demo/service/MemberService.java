@@ -5,18 +5,18 @@ import org.springframework.data.domain.Pageable;
 
 import com.example.demo.data.dto.MemberDto.MemberRequest;
 import com.example.demo.data.dto.MemberDto.MemberResponse;
-import com.example.demo.data.vo.UserInfo;
+import com.example.demo.data.dto.MemberDto.MemberUpdateRequest;
+import com.example.demo.data.vo.UserVo;
 
 public interface MemberService {
-
-	MemberResponse getOne(Long id);
-
 	Page<MemberResponse> getList(Pageable pageable);
 
 	MemberResponse insert(MemberRequest memberRequest);
 
-	void update(Long id, MemberRequest memberRequest, UserInfo user);
+	MemberResponse getOne(Long id, UserVo user);
 
-	void delete(Long id, UserInfo user);
+	void update(Long id, MemberUpdateRequest memberUpdateRequest, UserVo user);
+
+	void delete(Long id, UserVo user);
 
 }

@@ -1,0 +1,26 @@
+spring:
+  profiles: test
+  datasource:
+    hikari:
+      driver-class-name: org.h2.Driver
+      jdbc-url: jdbc:h2:mem:test
+      username: sa
+      password: null
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    database: h2
+    show-sql: true
+    generate-ddl: true
+jwt:
+  secret: secret
+  expirationInMs: 1235645645
+  tokenName: Authorization
+  signatureAlgorithm: HS512
+  
+logging:
+  level:
+    root: debug
+    org:
+      springframework:
+        web:
+          filter: debug

@@ -10,16 +10,14 @@ import com.example.demo.data.domain.Article;
 import com.example.demo.data.dto.ArticleDto.ArticleRequest;
 import com.example.demo.data.dto.ArticleDto.ArticleResponse;
 import com.example.demo.data.dto.ArticleDto.ArticleUpdateRequest;
-import com.example.demo.data.vo.UserInfo;
+import com.example.demo.data.vo.UserVo;
 import com.example.demo.exception.BusinessException;
 import com.example.demo.exception.ErrorCode;
 import com.example.demo.reopsitory.ArticleRepository;
 import com.example.demo.service.ArticleService;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
 
-@Log4j2
 @Transactional
 @RequiredArgsConstructor
 @Service("articleService")
@@ -37,7 +35,6 @@ public class ArticleServiceImpl implements ArticleService {
 	public ArticleResponse getOne(Long id) {
 
 		Article article = articleRepository.findById(id).orElseThrow(() -> {
-			log.error("getOne {}", id);
 			return new BusinessException(ErrorCode.ENTITY_NOT_FOUND);
 		});
 
@@ -47,12 +44,11 @@ public class ArticleServiceImpl implements ArticleService {
 	}
 
 	@Override
-	public ArticleResponse insert(ArticleRequest articleRequest, UserInfo user) {
+	public ArticleResponse insert(ArticleRequest articleRequest, UserVo user) {
 
 		Article article = modelMapper.map(articleRequest, Article.class);
 
-		if (!user.checkId(article.getMember().getId())) {
-			log.error("insert {}", articleRequest, user.getUsername());
+		if (!user.checkMember(article.getMember())) {
 			throw new BusinessException(ErrorCode.HANDLE_ACCESS_DENIED);
 		}
 
@@ -60,15 +56,13 @@ public class ArticleServiceImpl implements ArticleService {
 	}
 
 	@Override
-	public void update(Long id, ArticleUpdateRequest articleUpdateRequest, UserInfo user) {
+	public void update(Long id, ArticleUpdateRequest articleUpdateRequest, UserVo user) {
 
 		Article article = articleRepository.findOneById(id).orElseThrow(() -> {
-			log.error("update {}", id, user.getUsername());
 			return new BusinessException(ErrorCode.ENTITY_NOT_FOUND);
 		});
 
-		if (!user.checkId(article.getMember().getId())) {
-			log.error("update {}", id, user.getUsername());
+		if (!user.checkMember(article.getMember())) {
 			throw new BusinessException(ErrorCode.HANDLE_ACCESS_DENIED);
 		}
 
@@ -76,17 +70,15 @@ public class ArticleServiceImpl implements ArticleService {
 	}
 
 	@Override
-	public void delete(Long id, UserInfo user) {
+	public void delete(Long id, UserVo user) {
 
 		// 게시물 확인
 		Article article = articleRepository.findOneById(id).orElseThrow(() -> {
-			log.error("delete {}", id, user);
 			return new BusinessException(ErrorCode.ENTITY_NOT_FOUND);
 		});
 
 		// 권한 확인
-		if (!user.checkId(article.getMember().getId())) {
-			log.error("delete {}", id, user);
+		if (!user.checkMember(article.getMember())) {
 			throw new BusinessException(ErrorCode.HANDLE_ACCESS_DENIED);
 		}
 

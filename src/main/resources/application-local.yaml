@@ -1,0 +1,25 @@
+spring:
+  profiles: local
+  datasource:
+    hikari:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      jdbc-url: jdbc:mysql://192.168.56.1:3306/webdb?useSSL=false&characterEncoding=UTF-8&serverTimezone=UTC
+      username: tensing
+      password: 1234
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
+    database: mysql
+    show-sql: true
+    generate-ddl: true
+jwt:
+  secret: secret
+  expirationInMs: 1235645645
+  signatureAlgorithm: HS512
+  tokenName: Authorization
+logging:
+  level:
+    root: info
+    org:
+      springframework:
+        web:
+          filter: info

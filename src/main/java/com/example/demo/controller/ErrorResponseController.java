@@ -1,7 +1,6 @@
 package com.example.demo.controller;
 
-import java.util.List;
-
+import javax.servlet.RequestDispatcher;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.boot.web.servlet.error.ErrorController;
@@ -40,25 +39,32 @@ public class ErrorResponseController implements ErrorController {
 	@RequestMapping("/error")
 	public ResponseEntity<ErrorResponse> handleError(HttpServletRequest request) {
 
-		Exception exception = (Exception) request.getAttribute("javax.servlet.error.exception");
+		Object status = request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);
 
-		int status;
-		ErrorResponse errorResponse;
-
-		if (exception instanceof BusinessException) {
-			ErrorCode errorCode = ((BusinessException) exception).getErrorCode();
-			status = errorCode.getStatus();
-			errorResponse = ErrorResponse.of(errorCode);
-		} else {
-			status = (int) request.getAttribute("javax.servlet.error.status_code");
-			errorResponse = ErrorResponse.of(status, exception.getMessage());
+		if (status == null) {
+			log.info("handleError()");
+			return ResponseEntity.status(200).body(ErrorResponse.of(200, "error"));
 		}
 
-		return ResponseEntity.status(status).body(errorResponse);
+		int statusCode = Integer.valueOf(status.toString());
+		String message = String.valueOf(request.getAttribute(RequestDispatcher.ERROR_MESSAGE));
+
+		if (statusCode == HttpStatus.NOT_FOUND.value()) {
+			log.info("handleError()");
+			return ResponseEntity.status(statusCode).body(ErrorResponse.of(statusCode, "NOT FOUND"));
+		} else if (statusCode == HttpStatus.INTERNAL_SERVER_ERROR.value()) {
+			log.error("handleError()");
+			return ResponseEntity.status(statusCode).body(ErrorResponse.of(statusCode, "INTERNAL SERVER ERROR"));
+		} else {
+			log.info("handleError()");
+			return ResponseEntity.status(statusCode).body(ErrorResponse.of(statusCode, message));
+		}
+
 	}
 
 	@ExceptionHandler(BusinessException.class)
 	protected ResponseEntity<ErrorResponse> handleBusinessException(final BusinessException e) {
+		log.info("handleBusinessException() {}", e.getErrorCode().getMessage());
 		final ErrorCode errorCode = e.getErrorCode();
 		return ResponseEntity.status(errorCode.getStatus()).body(ErrorResponse.of(errorCode));
 	}
@@ -68,23 +74,22 @@ public class ErrorResponseController implements ErrorController {
 			MethodArgumentTypeMismatchException.class })
 	protected ErrorResponse handleBindException(Exception e) {
 
-		List<FieldError> fieldErrors = null;
-
 		if (e instanceof BindException) {
-			log.error("handleBindException", e);
-			fieldErrors = FieldError.of(((BindException) e).getBindingResult());
-		} else if (e instanceof MethodArgumentNotValidException) {
-			log.error("handleMethodArgumentNotValidException", e);
-			fieldErrors = FieldError.of(((MethodArgumentNotValidException) e).getBindingResult());
-		} else if (e instanceof MethodArgumentTypeMismatchException) {
-			log.error("handleMethodArgumentTypeMismatchException", e);
-			MethodArgumentTypeMismatchException methodArgumentTypeMismatchException = (MethodArgumentTypeMismatchException) e;
-			fieldErrors = FieldError.of(methodArgumentTypeMismatchException.getName(),
-					String.valueOf(methodArgumentTypeMismatchException.getValue()),
-					methodArgumentTypeMismatchException.getErrorCode());
+			log.info("handleBindException {}", e.getMessage());
+			return ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE,
+					FieldError.of(((BindException) e).getBindingResult()));
 		}
 
-		return ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE, fieldErrors);
+		if (e instanceof MethodArgumentNotValidException) {
+			log.info("handleMethodArgumentNotValidException {}", e.getMessage());
+			return ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE,
+					FieldError.of(((MethodArgumentNotValidException) e).getBindingResult()));
+		}
+
+		log.info("handleMethodArgumentTypeMismatchException {}", e.getMessage());
+		MethodArgumentTypeMismatchException matme = (MethodArgumentTypeMismatchException) e;
+		return ErrorResponse.of(ErrorCode.INVALID_TYPE_VALUE,
+				FieldError.of(matme.getName(), String.valueOf(matme.getValue()), matme.getErrorCode()));
 	}
 
 	/**
@@ -93,7 +98,7 @@ public class ErrorResponseController implements ErrorController {
 	@ResponseStatus(HttpStatus.FORBIDDEN)
 	@ExceptionHandler(AccessDeniedException.class)
 	protected ErrorResponse handleAccessDeniedException(AccessDeniedException e) {
-		log.error("handleAccessDeniedException", e);
+		log.info("handleAccessDeniedException {}", e.getMessage());
 		return ErrorResponse.of(ErrorCode.HANDLE_ACCESS_DENIED);
 	}
 
@@ -102,8 +107,9 @@ public class ErrorResponseController implements ErrorController {
 	 */
 	@ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
 	@ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-	protected ErrorResponse handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
-		log.error("handleHttpRequestMethodNotSupportedException", e);
+	protected ErrorResponse handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e,
+			HttpServletRequest request) {
+		log.info("handleHttpRequestMethodNotSupportedException {}", e.getMessage());
 		return ErrorResponse.of(ErrorCode.METHOD_NOT_ALLOWED);
 	}
 
@@ -113,7 +119,7 @@ public class ErrorResponseController implements ErrorController {
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 	@ExceptionHandler(Exception.class)
 	protected ErrorResponse handleException(Exception e) {
-		log.error("handleException", e);
+		log.error("handleException() ", e);
 		return ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR);
 	}
 

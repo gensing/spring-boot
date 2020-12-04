@@ -9,17 +9,24 @@ import org.springframework.validation.BindingResult;
 
 import com.example.demo.exception.ErrorCode;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+@ApiModel
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ErrorResponse {
 
+	@ApiModelProperty(position = 1, notes = "상태")
 	private int status;
+	@ApiModelProperty(position = 2, notes = "에러 코드")
 	private String code;
+	@ApiModelProperty(position = 3, notes = "메세지")
 	private String message;
+	@ApiModelProperty(position = 4, notes = "필드 에러")
 	private List<FieldError> errors;
 
 	private ErrorResponse(final int stauts, final String message) {

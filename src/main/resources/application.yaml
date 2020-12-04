@@ -1,0 +1,8 @@
+spring:
+  profiles: 
+    active: test
+logging:
+  file: ./log
+  config: classpath:logback-spring.xml
+server:
+  port: 80

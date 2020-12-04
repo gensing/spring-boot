@@ -6,7 +6,7 @@ import org.springframework.data.domain.Pageable;
 import com.example.demo.data.dto.ArticleDto.ArticleRequest;
 import com.example.demo.data.dto.ArticleDto.ArticleResponse;
 import com.example.demo.data.dto.ArticleDto.ArticleUpdateRequest;
-import com.example.demo.data.vo.UserInfo;
+import com.example.demo.data.vo.UserVo;
 
 public interface ArticleService {
 
@@ -14,10 +14,10 @@ public interface ArticleService {
 
 	Page<ArticleResponse> getList(Pageable pageable);
 
-	ArticleResponse insert(ArticleRequest articleRequest, UserInfo user);
+	ArticleResponse insert(ArticleRequest articleRequest, UserVo user);
 
-	void update(Long id, ArticleUpdateRequest articleUpdateRequest, UserInfo user);
+	void update(Long id, ArticleUpdateRequest articleUpdateRequest, UserVo user);
 
-	void delete(Long id, UserInfo user);
+	void delete(Long id, UserVo user);
 
 }

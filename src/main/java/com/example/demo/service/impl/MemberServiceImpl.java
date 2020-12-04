@@ -7,22 +7,25 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.demo.data.domain.Member;
-import com.example.demo.data.domain.Role;
 import com.example.demo.data.domain.Member.MemberBuilder;
+import com.example.demo.data.domain.RoleCode;
 import com.example.demo.data.dto.MemberDto.MemberRequest;
 import com.example.demo.data.dto.MemberDto.MemberResponse;
-import com.example.demo.data.vo.UserInfo;
+import com.example.demo.data.dto.MemberDto.MemberUpdateRequest;
+import com.example.demo.data.vo.UserVo;
 import com.example.demo.exception.BusinessException;
 import com.example.demo.exception.ErrorCode;
 import com.example.demo.reopsitory.MemberRepository;
 import com.example.demo.service.MemberService;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 
-@Log4j2
+@Slf4j
+@Transactional
 @RequiredArgsConstructor
 @Service
 public class MemberServiceImpl implements MemberService {
@@ -37,58 +40,72 @@ public class MemberServiceImpl implements MemberService {
 	}
 
 	@Override
-	public MemberResponse getOne(Long id) {
-		return memberRepository.findById(id).map(member -> modelMapper.map(member, MemberResponse.class))
-				.orElseThrow(() -> {
-					log.error("getOne {}", id);
-					return new BusinessException(ErrorCode.ENTITY_NOT_FOUND);
-				});
-	}
-
-	@Override
 	public MemberResponse insert(MemberRequest memberRequest) {
 
 		if (memberRepository.existsByName(memberRequest.getName())) {
-			log.error("insert {}", memberRequest);
+			log.info("insert() : memberRequest={}", memberRequest);
 			throw new BusinessException(ErrorCode.EMAIL_DUPLICATION);
 		}
 
-		MemberBuilder memberBuilder = modelMapper.map(memberRequest, MemberBuilder.class);
-		memberBuilder.password(passwordEncoder.encode(memberRequest.getPassword()));
-		memberBuilder.roles(Arrays.asList(Role.USER));
+		Member newMember = modelMapper.map(memberRequest, MemberBuilder.class)
+				.password(passwordEncoder.encode(memberRequest.getPassword())).roles(Arrays.asList(RoleCode.USER)).build();
 
-		Member newMember = memberRepository.save(memberBuilder.build());
-
-		return modelMapper.map(newMember, MemberResponse.class);
+		return modelMapper.map(memberRepository.save(newMember), MemberResponse.class);
 	}
 
 	@Override
-	public void update(Long id, MemberRequest memberRequest, UserInfo user) {
-
-		if (!user.checkId(id)) {
-			log.error("update {}", id, user);
-			throw new BusinessException(ErrorCode.HANDLE_ACCESS_DENIED);
-		}
-
+	public MemberResponse getOne(Long id, UserVo user) {
+		
 		Member member = memberRepository.findById(id).orElseThrow(() -> {
-			log.error("update {}", id, user);
+			log.info("getOne() : id={} , user={}", id, user);
 			return new BusinessException(ErrorCode.ENTITY_NOT_FOUND);
 		});
 
-		member.update(modelMapper.map(memberRequest, Member.class));
-	}
-
-	@Override
-	public void delete(Long id, UserInfo user) {
-
-		if (!user.checkId(id)) {
-			log.error("delete {}", id, user);
+		if (!user.checkMember(member)) {
+			log.info("getOne() : id={} , user={}", id, user);
 			throw new BusinessException(ErrorCode.HANDLE_ACCESS_DENIED);
 		}
 
-		if (!memberRepository.existsById(id)) {
-			log.error("delete {}", id, user);
-			throw new BusinessException(ErrorCode.ENTITY_NOT_FOUND);
+		return modelMapper.map(member, MemberResponse.class);
+
+	}
+
+	@Override
+	public void update(Long id, MemberUpdateRequest memberUpdateRequest, UserVo user) {
+
+		if (user == null) {
+			new BusinessException(ErrorCode.TOKEN_NOT_VALID);
+		}
+
+		Member member = memberRepository.findById(id).orElseThrow(() -> {
+			log.info("update() : id={} , user={}", id, user);
+			return new BusinessException(ErrorCode.ENTITY_NOT_FOUND);
+		});
+
+		if (!user.checkMember(member)) {
+			log.info("update() : id={} , user={}", id, user);
+			throw new BusinessException(ErrorCode.HANDLE_ACCESS_DENIED);
+		}
+
+		// dirty check
+		member.update(modelMapper.map(memberUpdateRequest, Member.class));
+	}
+
+	@Override
+	public void delete(Long id, UserVo user) {
+
+		if (user == null) {
+			new BusinessException(ErrorCode.TOKEN_NOT_VALID);
+		}
+
+		Member member = memberRepository.findById(id).orElseThrow(() -> {
+			log.info("delete() : id={} , user={} - ", id, user);
+			return new BusinessException(ErrorCode.ENTITY_NOT_FOUND);
+		});
+
+		if (user == null || !user.checkMember(member)) {
+			log.error("delete() : id={} , user={}", id, user);
+			throw new BusinessException(ErrorCode.HANDLE_ACCESS_DENIED);
 		}
 
 		memberRepository.deleteById(id);

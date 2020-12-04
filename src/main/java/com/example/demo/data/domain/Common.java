@@ -36,6 +36,6 @@ public abstract class Common {
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "del_yn", length = 1)
-	private DelType delType = DelType.N;
+	private DelCode delType = DelCode.N;
 
 }

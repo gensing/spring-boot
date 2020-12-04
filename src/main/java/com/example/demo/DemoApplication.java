@@ -4,22 +4,14 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.PropertySource;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CharacterEncodingFilter;
 import org.springframework.web.filter.CommonsRequestLoggingFilter;
 
-//@ComponentScan(basePackageClasses = StoryApplication.class)
-//@EntityScan(basePackageClasses = {DemoApplication.class, Jsr310JpaConverters.class})
-//@EnableConfigurationProperties({})
-@PropertySource("classpath:/properties.properties")
 @SpringBootApplication
-public class StoryApplication {
+public class DemoApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(StoryApplication.class, args);
+		SpringApplication.run(DemoApplication.class, args);
 	}
 
 	@Bean
@@ -37,21 +29,10 @@ public class StoryApplication {
 		CommonsRequestLoggingFilter filter = new CommonsRequestLoggingFilter();
 		filter.setIncludeClientInfo(true);
 		filter.setIncludeHeaders(true);
-		filter.setIncludePayload(true);
 		filter.setIncludeQueryString(true);
+		filter.setIncludePayload(true);
 		filter.setMaxPayloadLength(1000);
 		return filter;
 	}
 
-	@Bean
-	public CorsConfigurationSource corsConfigurationSource() {
-		CorsConfiguration configuration = new CorsConfiguration();
-		configuration.addAllowedOrigin("*");
-		configuration.addAllowedHeader("*");
-		configuration.addAllowedMethod("*");
-		configuration.setAllowCredentials(true);
-		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-		source.registerCorsConfiguration("/**", configuration);
-		return source;
-	}
 }

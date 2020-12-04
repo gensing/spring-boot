@@ -21,7 +21,8 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.example.demo.data.dto.MemberDto.MemberRequest;
 import com.example.demo.data.dto.MemberDto.MemberResponse;
-import com.example.demo.data.vo.UserInfo;
+import com.example.demo.data.dto.MemberDto.MemberUpdateRequest;
+import com.example.demo.data.vo.UserVo;
 import com.example.demo.service.MemberService;
 
 import io.swagger.annotations.Api;
@@ -38,6 +39,8 @@ public class MemberController {
 
 	@PostMapping(value = "", consumes = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<MemberResponse> post(@Valid @RequestBody MemberRequest memberRequest) {
+		new MemberRequest();
+
 		MemberResponse memberResponse = memberService.insert(memberRequest);
 		URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(memberResponse.getId())
 				.toUri();
@@ -46,20 +49,20 @@ public class MemberController {
 
 	@GetMapping("/{id}")
 	@ResponseStatus(HttpStatus.OK)
-	public MemberResponse get(@PathVariable Long id) {
-		return memberService.getOne(id);
+	public MemberResponse get(@PathVariable Long id, @ApiIgnore @Valid @AuthenticationPrincipal UserVo user) {
+		return memberService.getOne(id, user);
 	}
 
 	@PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-	@ResponseStatus(HttpStatus.OK)
-	public void put(@PathVariable Long id, @Valid @RequestBody MemberRequest memberRequest,
-			@ApiIgnore @Valid @AuthenticationPrincipal UserInfo user) {
-		memberService.update(id, memberRequest, user);
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void put(@PathVariable Long id, @RequestBody @Valid MemberUpdateRequest memberUpdateRequest,
+			@ApiIgnore @Valid @AuthenticationPrincipal UserVo user) {
+		memberService.update(id, memberUpdateRequest, user);
 	}
 
 	@DeleteMapping("/{id}")
-	@ResponseStatus(HttpStatus.OK)
-	public void delete(@PathVariable Long id, @ApiIgnore @Valid @AuthenticationPrincipal UserInfo user) {
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void delete(@PathVariable Long id, @ApiIgnore @Valid @AuthenticationPrincipal UserVo user) {
 		memberService.delete(id, user);
 	}
 

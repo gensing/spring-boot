@@ -1,12 +1,8 @@
 package com.example.demo.config;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.servlet.http.HttpServletResponse;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -16,10 +12,13 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.example.demo.data.domain.RoleCode;
 import com.example.demo.filter.AuthorizationFilter;
-import com.example.demo.service.impl.TokenServiceImpl;
-import com.example.demo.service.impl.UserDetailsServiceImpl;
+import com.example.demo.service.SecurityService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -28,13 +27,14 @@ import lombok.RequiredArgsConstructor;
 @EnableWebSecurity
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
-	private final UserDetailsServiceImpl authenticationService;
-	private final PasswordEncoder passwordEncoder;
-	private final TokenServiceImpl tokenProvider;
+	private final SwaggerConfiguration swaggerConfig;
 
-	private static final String[] AUTH_WHITELIST = { "/**"
-			// other public endpoints of your API may be appended to this array
-	};
+	private final SecurityService securityServiceImpl;
+	private final PasswordEncoder passwordEncoder;
+
+	private static final String[] SIGNUP_SIGNIN_WHITELIST = { "/member", "/login", "/refresh" };
+	private static final String[] AUTH_WHITELIST = { "/", "/article/**" };
+	private static final String[] ADMIN_LIST = { "/admin" };
 
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
@@ -46,36 +46,47 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 				.csrf().disable()// CSRF 프로텍션을 비활성화
 				.cors().disable()// CORS 프로텍션을 비활성화
 				.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()// 세션 정책 설정
-				.addFilterBefore(new AuthorizationFilter(tokenProvider), UsernamePasswordAuthenticationFilter.class)// 인증
-				.authorizeRequests().antMatchers(AUTH_WHITELIST).permitAll().anyRequest().authenticated().and()//
-				.exceptionHandling().authenticationEntryPoint((request, response, e) -> {
-					response.sendError(HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
-				});
+				.authorizeRequests()//
+				.antMatchers(HttpMethod.GET, AUTH_WHITELIST).permitAll()//
+				.antMatchers(HttpMethod.POST, SIGNUP_SIGNIN_WHITELIST).permitAll()//
+				.antMatchers(ADMIN_LIST).hasRole(RoleCode.ADMIN.name())//
+				.anyRequest().authenticated().and()//
+				.exceptionHandling()//
+				// 권한이 필요한 리소스 접근시 -> 권한 정보가 없을 시 수행 ( accessToken == null )
+				.accessDeniedHandler(securityServiceImpl)
+				// 권한이 필요한 리소스 접근시 -> 권한 레벨이 부족할 시 수행 ( role_admin != role_user )
+				.authenticationEntryPoint(securityServiceImpl)//
+				.and()//
+				.addFilterBefore(new AuthorizationFilter(securityServiceImpl),
+						UsernamePasswordAuthenticationFilter.class);
 	}
 
 	@Override
 	public void configure(WebSecurity web) {
-
-		// 정적 리소스 url
-		List<String> pahts = new ArrayList<String>();
-		pahts.add("/v2/api-docs");
-		pahts.add("/swagger-resources/**");
-		pahts.add("/swagger-ui.html");
-		pahts.add("/webjars/**");
-		pahts.add("/swagger/**");
-
-		pahts.stream().map(path -> web.ignoring().antMatchers(path));
+		web.ignoring().antMatchers(swaggerConfig.getUrlList());
 	}
 
 	@Override
 	protected void configure(AuthenticationManagerBuilder authenticationManagerBuilder) throws Exception {
-		authenticationManagerBuilder.userDetailsService(authenticationService).passwordEncoder(passwordEncoder);
+		authenticationManagerBuilder.userDetailsService(securityServiceImpl).passwordEncoder(passwordEncoder);
 	}
 
 	@Bean
 	@Override
 	public AuthenticationManager authenticationManagerBean() throws Exception {
 		return super.authenticationManagerBean();
+	}
+
+	@Bean
+	public CorsConfigurationSource corsConfigurationSource() {
+		CorsConfiguration configuration = new CorsConfiguration();
+		configuration.addAllowedOrigin("*");
+		configuration.addAllowedHeader("*");
+		configuration.addAllowedMethod("*");
+		configuration.setAllowCredentials(true);
+		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+		source.registerCorsConfiguration("/**", configuration);
+		return source;
 	}
 
 }

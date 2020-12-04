@@ -38,12 +38,12 @@ public class Member extends Common {
 	@Column(nullable = false)
 	String password;
 
-	@ElementCollection(targetClass = Role.class, fetch = FetchType.EAGER)
+	@ElementCollection(targetClass = RoleCode.class, fetch = FetchType.EAGER)
 	@CollectionTable(name = "member_role", joinColumns = {
 			@JoinColumn(name = "member_id") }, foreignKey = @ForeignKey(name = "fk_member_role_member_id"))
 	@Column(name = "role_id", nullable = false)
-	@Enumerated(EnumType.ORDINAL) // to converter
-	List<Role> roles;
+	@Enumerated(EnumType.ORDINAL) // to converter 필요
+	List<RoleCode> roles;
 
 	public void update(Member member) {
 		this.password = member.getPassword();

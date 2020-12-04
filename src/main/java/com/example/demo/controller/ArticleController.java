@@ -3,12 +3,12 @@ package com.example.demo.controller;
 import javax.validation.Valid;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -20,7 +20,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.demo.data.dto.ArticleDto.ArticleRequest;
 import com.example.demo.data.dto.ArticleDto.ArticleResponse;
 import com.example.demo.data.dto.ArticleDto.ArticleUpdateRequest;
-import com.example.demo.data.vo.UserInfo;
+import com.example.demo.data.dto.PageRequest;
+import com.example.demo.data.vo.UserVo;
 import com.example.demo.service.ArticleService;
 
 import io.swagger.annotations.Api;
@@ -37,10 +38,10 @@ public class ArticleController {
 	private final ArticleService articleService;
 
 	@ApiOperation(value = "get article list")
-	@GetMapping("")
+	@GetMapping(value = "")
 	@ResponseStatus(code = HttpStatus.OK)
-	public Page<ArticleResponse> gets(Pageable pageable) {
-		return articleService.getList(pageable);
+	public Page<ArticleResponse> gets(@ModelAttribute PageRequest pageRequest) {
+		return articleService.getList(pageRequest.of());
 	}
 
 	@ApiOperation(value = "get article")
@@ -54,7 +55,7 @@ public class ArticleController {
 	@PostMapping("")
 	@ResponseStatus(HttpStatus.CREATED)
 	public ArticleResponse post(@Valid @RequestBody ArticleRequest articleRequest,
-			@ApiIgnore @AuthenticationPrincipal UserInfo userInfo) {
+			@ApiIgnore @AuthenticationPrincipal UserVo userInfo) {
 		return articleService.insert(articleRequest, userInfo);
 	}
 
@@ -62,14 +63,14 @@ public class ArticleController {
 	@PutMapping("/{id}")
 	@ResponseStatus(code = HttpStatus.NO_CONTENT)
 	public void put(@PathVariable Long id, @Valid @RequestBody ArticleUpdateRequest articleUpdateRequest,
-			@ApiIgnore @AuthenticationPrincipal UserInfo userInfo) {
+			@ApiIgnore @AuthenticationPrincipal UserVo userInfo) {
 		articleService.update(id, articleUpdateRequest, userInfo);
 	}
 
 	@ApiOperation(value = "delete article")
 	@DeleteMapping("/{id}")
 	@ResponseStatus(code = HttpStatus.NO_CONTENT)
-	public void delete(@PathVariable Long id, @ApiIgnore @AuthenticationPrincipal UserInfo userInfo) {
+	public void delete(@PathVariable Long id, @ApiIgnore @AuthenticationPrincipal UserVo userInfo) {
 		articleService.delete(id, userInfo);
 	}
 

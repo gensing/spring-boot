@@ -18,22 +18,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.SignatureAlgorithm;
 
 @Configuration
-public class AppConfig implements WebMvcConfigurer {
-
-	@Value("${jwt.secret}")
-	private String secret;
-
-	@Value("${jwt.expirationInMs}")
-	private int jwtExpirationInMs;
+public class AppConfiguration implements WebMvcConfigurer {
 
 	@Override
 	public void addInterceptors(InterceptorRegistry registry) {
-		// registry.addInterceptor(interceptor).addPathPatterns("/**").excludePathPatterns("/user/**");
-	}
-
-	@Bean
-	public TokenProvider jwtProvider() {
-		return new TokenProvider(secret, jwtExpirationInMs, SignatureAlgorithm.HS512);
 	}
 
 	@Bean
@@ -55,5 +43,12 @@ public class AppConfig implements WebMvcConfigurer {
 	public ObjectMapper objectMapper() {
 		ObjectMapper ojbectMapper = new ObjectMapper();
 		return ojbectMapper;
+	}
+
+	@Bean
+	public TokenProvider tokenProvider(@Value("${jwt.secret}") String secret,
+			@Value("#{'${jwt.signatureAlgorithm}'.toUpperCase()}") SignatureAlgorithm signatureAlgorithm,
+			@Value("${jwt.expirationInMs}") int jwtExpirationInMs) {
+		return new TokenProvider(secret, signatureAlgorithm, jwtExpirationInMs);
 	}
 }
