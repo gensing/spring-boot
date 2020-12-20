@@ -1,5 +1,12 @@
 package com.example.demo.config;
 
+import java.io.IOException;
+
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -11,10 +18,13 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.access.channel.ChannelProcessingFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.stereotype.Component;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.example.demo.data.domain.RoleCode;
 import com.example.demo.filter.AuthorizationFilter;
@@ -57,8 +67,27 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 				// 권한이 필요한 리소스 접근시 -> 권한 레벨이 부족할 시 수행 ( role_admin != role_user )
 				.authenticationEntryPoint(securityServiceImpl)//
 				.and()//
+				.addFilterBefore(new CorsFilter(), ChannelProcessingFilter.class)
 				.addFilterBefore(new AuthorizationFilter(securityServiceImpl),
 						UsernamePasswordAuthenticationFilter.class);
+	}
+	
+	@Component
+	public class CorsFilter extends OncePerRequestFilter {
+
+	    @Override
+	    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+	        response.setHeader("Access-Control-Allow-Origin", "*");
+	        response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+	        response.setHeader("Access-Control-Max-Age", "3600");
+	        response.setHeader("Access-Control-Allow-Headers", "authorization, content-type, xsrf-token");
+	        response.addHeader("Access-Control-Expose-Headers", "xsrf-token");
+	        if ("OPTIONS".equals(request.getMethod())) {
+	            response.setStatus(HttpServletResponse.SC_OK);
+	        } else { 
+	            filterChain.doFilter(request, response);
+	        }
+	    }
 	}
 
 	@Override
@@ -82,7 +111,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 		CorsConfiguration configuration = new CorsConfiguration();
 		configuration.addAllowedOrigin("*");
 		configuration.addAllowedHeader("*");
-		configuration.addAllowedMethod("*");
+		configuration.addAllowedMethod("GET, POST, PUT, DELETE, OPTIONS");
 		configuration.setAllowCredentials(true);
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		source.registerCorsConfiguration("/**", configuration);

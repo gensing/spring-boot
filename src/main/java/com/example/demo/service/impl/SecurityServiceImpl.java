@@ -71,12 +71,13 @@ public class SecurityServiceImpl implements SecurityService {
 
 		Claims claims = Jwts.claims().setSubject("access");
 		claims.put("id", userVo.getId());
-		claims.put("email", userVo.getUsername());
+		claims.put("username", userVo.getUsername());
 		claims.put("role", userVo.getAuthorities());
 
 		String accessToken = tokenProvider.generateToken(claims);
+		
 
-		return TokenDto.builder().accessToken(accessToken).build();
+		return TokenDto.builder().id(userVo.getId()).username(userVo.getUsername()).accessToken(accessToken).build();
 	}
 
 	@Override
@@ -86,7 +87,7 @@ public class SecurityServiceImpl implements SecurityService {
 			Claims claims = tokenProvider.decodeToken(accessToken);
 
 			Long id = claims.get("id", Long.class);
-			String email = claims.get("email", String.class);
+			String email = claims.get("username", String.class);
 			Collection<?> role = claims.get("role", Collection.class);
 
 			if (id == null || email == null || role == null) {

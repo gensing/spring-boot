@@ -39,9 +39,9 @@ public class MemberController {
 
 	@PostMapping(value = "", consumes = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<MemberResponse> post(@Valid @RequestBody MemberRequest memberRequest) {
-		new MemberRequest();
-
+		
 		MemberResponse memberResponse = memberService.insert(memberRequest);
+		
 		URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(memberResponse.getId())
 				.toUri();
 		return ResponseEntity.created(uri).body(memberResponse);

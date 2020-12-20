@@ -48,14 +48,15 @@ public class MemberServiceImpl implements MemberService {
 		}
 
 		Member newMember = modelMapper.map(memberRequest, MemberBuilder.class)
-				.password(passwordEncoder.encode(memberRequest.getPassword())).roles(Arrays.asList(RoleCode.USER)).build();
+				.password(passwordEncoder.encode(memberRequest.getPassword())).roles(Arrays.asList(RoleCode.USER))
+				.build();
 
 		return modelMapper.map(memberRepository.save(newMember), MemberResponse.class);
 	}
 
 	@Override
 	public MemberResponse getOne(Long id, UserVo user) {
-		
+
 		Member member = memberRepository.findById(id).orElseThrow(() -> {
 			log.info("getOne() : id={} , user={}", id, user);
 			return new BusinessException(ErrorCode.ENTITY_NOT_FOUND);
@@ -88,7 +89,8 @@ public class MemberServiceImpl implements MemberService {
 		}
 
 		// dirty check
-		member.update(modelMapper.map(memberUpdateRequest, Member.class));
+		member.update(modelMapper.map(memberUpdateRequest, MemberBuilder.class)
+				.password(passwordEncoder.encode(memberUpdateRequest.getPassword())).build());
 	}
 
 	@Override
