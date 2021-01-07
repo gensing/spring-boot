@@ -20,7 +20,7 @@ import lombok.RequiredArgsConstructor;
 
 @Transactional
 @RequiredArgsConstructor
-@Service
+@Service("articleService")
 public class ArticleServiceImpl implements ArticleService {
 
 	private final ArticleRepository articleRepository;

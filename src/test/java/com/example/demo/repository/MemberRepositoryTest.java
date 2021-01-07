@@ -36,7 +36,6 @@ public class MemberRepositoryTest {
 
 		// then
 		then("gensing").isEqualTo(member.getName());
-
 	}
 
 }
