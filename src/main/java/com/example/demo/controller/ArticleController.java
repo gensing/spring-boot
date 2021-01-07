@@ -35,20 +35,20 @@ import springfox.documentation.annotations.ApiIgnore;
 @RequestMapping(value = { "/article" }, produces = { MediaType.APPLICATION_JSON_VALUE })
 public class ArticleController {
 
-	private final ArticleService articleService;
+	private final ArticleService articleServiceImpl;
 
 	@ApiOperation(value = "get article list")
 	@GetMapping(value = "")
 	@ResponseStatus(code = HttpStatus.OK)
 	public Page<ArticleResponse> gets(@ModelAttribute PageRequest pageRequest) {
-		return articleService.getList(pageRequest.of());
+		return articleServiceImpl.getList(pageRequest.of());
 	}
 
 	@ApiOperation(value = "get article")
 	@GetMapping("/{id}")
 	@ResponseStatus(code = HttpStatus.OK)
 	public ArticleResponse get(@PathVariable Long id) {
-		return articleService.getOne(id);
+		return articleServiceImpl.getOne(id);
 	}
 
 	@ApiOperation(value = "insert article")
@@ -56,7 +56,7 @@ public class ArticleController {
 	@ResponseStatus(HttpStatus.CREATED)
 	public ArticleResponse post(@Valid @RequestBody ArticleRequest articleRequest,
 			@ApiIgnore @AuthenticationPrincipal UserVo userInfo) {
-		return articleService.insert(articleRequest, userInfo);
+		return articleServiceImpl.insert(articleRequest, userInfo);
 	}
 
 	@ApiOperation(value = "update article")
@@ -64,14 +64,14 @@ public class ArticleController {
 	@ResponseStatus(code = HttpStatus.NO_CONTENT)
 	public void put(@PathVariable Long id, @Valid @RequestBody ArticleUpdateRequest articleUpdateRequest,
 			@ApiIgnore @AuthenticationPrincipal UserVo userInfo) {
-		articleService.update(id, articleUpdateRequest, userInfo);
+		articleServiceImpl.update(id, articleUpdateRequest, userInfo);
 	}
 
 	@ApiOperation(value = "delete article")
 	@DeleteMapping("/{id}")
 	@ResponseStatus(code = HttpStatus.NO_CONTENT)
 	public void delete(@PathVariable Long id, @ApiIgnore @AuthenticationPrincipal UserVo userInfo) {
-		articleService.delete(id, userInfo);
+		articleServiceImpl.delete(id, userInfo);
 	}
 
 }
