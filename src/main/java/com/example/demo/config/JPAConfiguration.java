@@ -13,17 +13,10 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import com.zaxxer.hikari.HikariDataSource;
-
-//@EntityScan(basePackageClasses = { DemoApplication.class, Jsr310JpaConverters.class })
+//properties 방식 사용시 entity scan 범위 지정
+//@EntityScan(basePackageClasses = { DemoApplication.class, Jsr310JpaConverters.class }) 
 @Configuration
 public class JPAConfiguration {
-
-	@Bean
-	@ConfigurationProperties("spring.datasource.hikari")
-	public DataSource dataSource() {
-		return new HikariDataSource();
-	}
 
 	@Bean
 	@ConfigurationProperties("spring.jpa")
@@ -41,7 +34,7 @@ public class JPAConfiguration {
 		return containerEntityManagerFactoryBean;
 	}
 
-	@Bean
+	@Bean("transactionManager")
 	public PlatformTransactionManager transactionManager(EntityManagerFactory entityManagerFactory) {
 		return new JpaTransactionManager(entityManagerFactory);
 	}

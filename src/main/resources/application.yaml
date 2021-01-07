@@ -4,5 +4,16 @@ spring:
 logging:
   file: ./log
   config: classpath:logback-spring.xml
+  #level: TRACE
 server:
   port: 80
+ 
+
+# MyBatis
+# mapper.xml 위치 지정
+mybatis:
+  mapper-locations: classpath:/mybatis/mappers/**.xml
+  config-location: classpath:/mybatis/mybatis-config.xml
+#  type-aliases-package: com.example.demo.data.domain
+#  configuration:
+#     map-underscore-to-camel-case: true
